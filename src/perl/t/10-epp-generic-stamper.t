@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 54;
+use Test::More tests => 158;
 use Test::Exception;
 use File::Temp qw/tempdir/;
 use File::Slurp;
@@ -293,6 +293,165 @@ my $base_uri =  'http://testserver.com:1234/here' ;
   $doc = $s->_stamping($doc, $stamping_method_ref);
 
   my @wells = ('A:1', 'B:1', 'C:1', 'D:1', 'E:1', 'F:1', 'G:1', 'H:1', 'A:2');
+
+  foreach my $placement ($doc->findnodes('/stp:placements/output-placements/output-placement')->get_nodelist()) {
+    is($placement->findvalue('./location/value'), shift @wells, 'Puts in correct well');
+  }
+
+}
+
+# Stamp artifacts by the proceed list
+{
+  local $ENV{'WTSICLARITY_WEBCACHE_DIR'} = 't/data/epp/generic/stamper/group';
+
+  my $analytes = {
+    'input_container_1' => {
+      'output_containers' => [
+        { uri => 'Con 1', limsid => 1, }
+      ],
+      'analyte1' => { well => 'A:1', target_analyte_uri => ['target01'] },
+      'analyte2' => { well => 'B:1', target_analyte_uri => ['target02'] },
+      'analyte3' => { well => 'C:1', target_analyte_uri => ['target03'] },
+      'analyte4' => { well => 'D:1', target_analyte_uri => ['target04'] },
+      'analyte5' => { well => 'E:1', target_analyte_uri => ['target05'] },
+      'analyte6' => { well => 'F:1', target_analyte_uri => ['target06'] },
+      'analyte7' => { well => 'G:1', target_analyte_uri => ['target07'] },
+      'analyte8' => { well => 'H:1', target_analyte_uri => ['target08'] },
+      'analyte9' => { well => 'A:2', target_analyte_uri => ['target09'] },
+      'analyte10' => { well => 'B:2', target_analyte_uri => ['target10'] },
+      'analyte11' => { well => 'C:2', target_analyte_uri => ['target11'] },
+      'analyte12' => { well => 'D:2', target_analyte_uri => ['target12'] },
+      'analyte13' => { well => 'E:2', target_analyte_uri => ['target13'] },
+      'analyte14' => { well => 'F:2', target_analyte_uri => ['target14'] },
+      'analyte15' => { well => 'G:2', target_analyte_uri => ['target15'] },
+      'analyte16' => { well => 'H:2', target_analyte_uri => ['target16'] },
+      'analyte17' => { well => 'A:3', target_analyte_uri => ['target17'] },
+      'analyte18' => { well => 'B:3', target_analyte_uri => ['target18'] },
+      'analyte19' => { well => 'C:3', target_analyte_uri => ['target19'] },
+      'analyte20' => { well => 'D:3', target_analyte_uri => ['target20'] },
+      'analyte21' => { well => 'E:3', target_analyte_uri => ['target21'] },
+      'analyte22' => { well => 'F:3', target_analyte_uri => ['target22'] },
+      'analyte23' => { well => 'G:3', target_analyte_uri => ['target23'] },
+      'analyte24' => { well => 'H:3', target_analyte_uri => ['target24'] },
+      'analyte25' => { well => 'A:4', target_analyte_uri => ['target25'] },
+      'analyte26' => { well => 'B:4', target_analyte_uri => ['target26'] },
+      'analyte27' => { well => 'C:4', target_analyte_uri => ['target27'] },
+      'analyte28' => { well => 'D:4', target_analyte_uri => ['target28'] },
+      'analyte29' => { well => 'E:4', target_analyte_uri => ['target29'] },
+      'analyte30' => { well => 'F:4', target_analyte_uri => ['target30'] },
+      'analyte31' => { well => 'G:4', target_analyte_uri => ['target31'] },
+      'analyte32' => { well => 'H:4', target_analyte_uri => ['target32'] },
+      'analyte33' => { well => 'A:5', target_analyte_uri => ['target33'] },
+      'analyte34' => { well => 'B:5', target_analyte_uri => ['target34'] },
+      'analyte35' => { well => 'C:5', target_analyte_uri => ['target35'] },
+      'analyte36' => { well => 'D:5', target_analyte_uri => ['target36'] },
+      'analyte37' => { well => 'E:5', target_analyte_uri => ['target37'] },
+      'analyte38' => { well => 'F:5', target_analyte_uri => ['target38'] },
+      'analyte39' => { well => 'G:5', target_analyte_uri => ['target39'] },
+      'analyte40' => { well => 'H:5', target_analyte_uri => ['target40'] },
+      'analyte41' => { well => 'A:6', target_analyte_uri => ['target41'] },
+      'analyte42' => { well => 'B:6', target_analyte_uri => ['target42'] },
+      'analyte43' => { well => 'C:6', target_analyte_uri => ['target43'] },
+      'analyte44' => { well => 'D:6', target_analyte_uri => ['target44'] },
+      'analyte45' => { well => 'E:6', target_analyte_uri => ['target45'] },
+      'analyte46' => { well => 'F:6', target_analyte_uri => ['target46'] },
+      'analyte47' => { well => 'G:6', target_analyte_uri => ['target47'] },
+      'analyte48' => { well => 'H:6', target_analyte_uri => ['target48'] },
+      'analyte49' => { well => 'A:7', target_analyte_uri => ['target49'] },
+      'analyte50' => { well => 'B:7', target_analyte_uri => ['target50'] },
+      'analyte51' => { well => 'C:7', target_analyte_uri => ['target51'] },
+      'analyte52' => { well => 'D:7', target_analyte_uri => ['target52'] },
+      'analyte53' => { well => 'E:7', target_analyte_uri => ['target53'] },
+      'analyte54' => { well => 'F:7', target_analyte_uri => ['target54'] },
+      'analyte55' => { well => 'G:7', target_analyte_uri => ['target55'] },
+      'analyte56' => { well => 'H:7', target_analyte_uri => ['target56'] },
+      'analyte57' => { well => 'A:8', target_analyte_uri => ['target57'] },
+      'analyte58' => { well => 'B:8', target_analyte_uri => ['target58'] },
+      'analyte59' => { well => 'C:8', target_analyte_uri => ['target59'] },
+      'analyte60' => { well => 'D:8', target_analyte_uri => ['target60'] },
+      'analyte61' => { well => 'E:8', target_analyte_uri => ['target61'] },
+      'analyte62' => { well => 'F:8', target_analyte_uri => ['target62'] },
+      'analyte63' => { well => 'G:8', target_analyte_uri => ['target63'] },
+      'analyte64' => { well => 'H:8', target_analyte_uri => ['target64'] },
+      'analyte65' => { well => 'A:9', target_analyte_uri => ['target65'] },
+      'analyte66' => { well => 'B:9', target_analyte_uri => ['target66'] },
+      'analyte67' => { well => 'C:9', target_analyte_uri => ['target67'] },
+      'analyte68' => { well => 'D:9', target_analyte_uri => ['target68'] },
+      'analyte69' => { well => 'E:9', target_analyte_uri => ['target69'] },
+      'analyte70' => { well => 'F:9', target_analyte_uri => ['target70'] },
+      'analyte71' => { well => 'G:9', target_analyte_uri => ['target71'] },
+      'analyte72' => { well => 'H:9', target_analyte_uri => ['target72'] },
+      'analyte73' => { well => 'A:10', target_analyte_uri => ['target73'] },
+      'analyte74' => { well => 'B:10', target_analyte_uri => ['target74'] },
+      'analyte75' => { well => 'C:10', target_analyte_uri => ['target75'] },
+      'analyte76' => { well => 'D:10', target_analyte_uri => ['target76'] },
+      'analyte77' => { well => 'E:10', target_analyte_uri => ['target77'] },
+      'analyte78' => { well => 'F:10', target_analyte_uri => ['target78'] },
+      'analyte79' => { well => 'G:10', target_analyte_uri => ['target79'] },
+      'analyte80' => { well => 'H:10', target_analyte_uri => ['target80'] },
+      'analyte81' => { well => 'A:11', target_analyte_uri => ['target81'] },
+      'analyte82' => { well => 'B:11', target_analyte_uri => ['target82'] },
+      'analyte83' => { well => 'C:11', target_analyte_uri => ['target83'] },
+      'analyte84' => { well => 'D:11', target_analyte_uri => ['target84'] },
+      'analyte85' => { well => 'E:11', target_analyte_uri => ['target85'] },
+      'analyte86' => { well => 'F:11', target_analyte_uri => ['target86'] },
+      'analyte87' => { well => 'G:11', target_analyte_uri => ['target87'] },
+      'analyte88' => { well => 'H:11', target_analyte_uri => ['target88'] },
+      'analyte89' => { well => 'A:12', target_analyte_uri => ['target89'] },
+      'analyte90' => { well => 'B:12', target_analyte_uri => ['target90'] },
+      'analyte91' => { well => 'C:12', target_analyte_uri => ['target91'] },
+      'analyte92' => { well => 'D:12', target_analyte_uri => ['target92'] },
+      'analyte93' => { well => 'E:12', target_analyte_uri => ['target93'] },
+      'analyte94' => { well => 'F:12', target_analyte_uri => ['target94'] },
+      'analyte95' => { well => 'G:12', target_analyte_uri => ['target95'] },
+      'analyte96' => { well => 'H:12', target_analyte_uri => ['target96'] },
+    },
+    'input_container_2' => {
+      'output_containers' => [
+        { uri => 'Con 2', limsid => 2, }
+      ],
+      'analyte103' => { well => 'D:1', target_analyte_uri => ['target103'] },
+      'analyte104' => { well => 'E:1', target_analyte_uri => ['target104'] },
+      'analyte105' => { well => 'F:1', target_analyte_uri => ['target105'] },
+      'analyte106' => { well => 'G:1', target_analyte_uri => ['target106'] },
+    },
+    'input_container_3' => {
+      'output_containers' => [
+        { uri => 'Con 2', limsid => 2, }
+      ],
+      'analyte107' => { well => 'G:1', target_analyte_uri => ['target107'] },
+      'analyte108' => { well => 'E:4', target_analyte_uri => ['target108'] },
+      'analyte109' => { well => 'G:3', target_analyte_uri => ['target109'] },
+      'analyte110' => { well => 'C:5', target_analyte_uri => ['target110'] },
+    }
+  };
+
+  my $s = wtsi_clarity::epp::generic::stamper->new(
+    process_url => 'http://testserver.com:1234/here/processes/24-25701',
+    step_url => 'http://testserver.com:1234/here/steps/24-25350',
+    proceed_to_cherrypick => 1,
+    _analytes => $analytes,
+  );
+
+  my $doc = $s->_create_placements_doc;
+
+  my $stamping_method_ref = \&wtsi_clarity::epp::generic::stamper::_group_inputs_by_container_stamp;
+  $doc = $s->_stamping($doc, $stamping_method_ref);
+
+  my @wells = ( 'A:1', 'B:1', 'C:1', 'D:1', 'E:1', 'F:1', 'G:1', 'H:1',
+                'A:2', 'B:2', 'C:2', 'D:2', 'E:2', 'F:2', 'G:2', 'H:2',
+                'A:3', 'B:3', 'C:3', 'D:3', 'E:3', 'F:3', 'G:3', 'H:3',
+                'A:4', 'B:4', 'C:4', 'D:4', 'E:4', 'F:4', 'G:4', 'H:4',
+                'A:5', 'B:5', 'C:5', 'D:5', 'E:5', 'F:5', 'G:5', 'H:5',
+                'A:6', 'B:6', 'C:6', 'D:6', 'E:6', 'F:6', 'G:6', 'H:6',
+                'A:7', 'B:7', 'C:7', 'D:7', 'E:7', 'F:7', 'G:7', 'H:7',
+                'A:8', 'B:8', 'C:8', 'D:8', 'E:8', 'F:8', 'G:8', 'H:8',
+                'A:9', 'B:9', 'C:9', 'D:9', 'E:9', 'F:9', 'G:9', 'H:9',
+                'A:10', 'B:10', 'C:10', 'D:10', 'E:10', 'F:10', 'G:10', 'H:10',
+                'A:11', 'B:11', 'C:11', 'D:11', 'E:11', 'F:11', 'G:11', 'H:11',
+                'A:12', 'B:12', 'C:12', 'D:12', 'E:12', 'F:12', 'G:12', 'H:12',
+                'A:1', 'B:1', 'C:1', 'D:1', 'E:1', 'F:1', 'G:1', 'H:1'
+  );
 
   foreach my $placement ($doc->findnodes('/stp:placements/output-placements/output-placement')->get_nodelist()) {
     is($placement->findvalue('./location/value'), shift @wells, 'Puts in correct well');

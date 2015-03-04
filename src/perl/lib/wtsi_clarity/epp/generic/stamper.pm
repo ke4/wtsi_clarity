@@ -13,14 +13,17 @@ extends 'wtsi_clarity::epp';
 with 'wtsi_clarity::util::clarity_elements';
 
 ##no critic ValuesAndExpressions::RequireInterpolationOfMetachars
-Readonly::Scalar my $IO_MAP_PATH              => q{ /prc:process/input-output-map[output[@output-type='Analyte']]};
-Readonly::Scalar my $OUTPUT_IDS_PATH          => q{ /prc:process/input-output-map/output[@output-type='Analyte']/@limsid};
-Readonly::Scalar my $CONTAINER_PATH           => q{ /art:artifact/location/container/@uri };
-Readonly::Scalar my $BATCH_CONTAINER_PATH     => q{ /art:details/art:artifact/location/container/@limsid };
-Readonly::Scalar my $WELL_PATH                => q{ /art:artifact/location/value };
-Readonly::Scalar my $CONTAINER_TYPE_NAME_PATH => q{ /con:container/type/@name[1] };
-Readonly::Scalar my $CONTAINER_NAME_PATH      => q{ /con:container/name/text() };
-Readonly::Scalar my $CONTROL_PATH             => q{ /art:artifact/control-type };
+Readonly::Scalar my $IO_MAP_PATH                => q{ /prc:process/input-output-map[output[@output-type='Analyte']]};
+Readonly::Scalar my $OUTPUT_IDS_PATH            => q{ /prc:process/input-output-map/output[@output-type='Analyte']/@limsid};
+Readonly::Scalar my $CONTAINER_PATH             => q{ /art:artifact/location/container/@uri };
+Readonly::Scalar my $BATCH_CONTAINER_PATH       => q{ /art:details/art:artifact/location/container/@limsid };
+Readonly::Scalar my $WELL_PATH                  => q{ /art:artifact/location/value };
+Readonly::Scalar my $CONTAINER_TYPE_NAME_PATH   => q{ /con:container/type/@name[1] };
+Readonly::Scalar my $CONTAINER_NAME_PATH        => q{ /con:container/name/text() };
+Readonly::Scalar my $CONTROL_PATH               => q{ /art:artifact/control-type };
+Readonly::Scalar my $SAMPLE_PATH                => q{ /art:artifact/sample/@uri };
+Readonly::Scalar my $PROCEED_TO_SEQUENCING_PATH => q{ /smp:sample/udf:field/[name="WTSI Proceed To Sequencing?"]/text()};
+Readonly::Scalar my $NUMBER_OF_WELLS_STOCK_PLATE => 96;
 ##use critic
 
 our $VERSION = '0.0';
@@ -44,11 +47,9 @@ override 'run' => sub {
     croak q{One can not use the group stamping with the copy_on_target option!};
   }
 
-  ##no critic ValuesAndExpressions::ProhibitMagicNumbers
-  if ($self->group && $self->process_doc->input_artifacts->findnodes('/art:details/art:artifact')->size() > 96) {
+  if ($self->group && $self->process_doc->input_artifacts->findnodes('/art:details/art:artifact')->size() > $NUMBER_OF_WELLS_STOCK_PLATE) {
     croak q{Can not do a group stamp for more than 96 inputs!};
   }
-  ##use critic
 
   $self->_create_containers();
   my $doc = $self->_create_placements_doc;
@@ -73,6 +74,13 @@ override 'run' => sub {
 };
 
 ##
+
+has 'proceed_to_cherrypick' => (
+  isa      => 'Bool',
+  is       => 'ro',
+  required => 0,
+  default  => 0,
+);
 
 has 'controls' => (
   isa       => 'Bool',
@@ -207,6 +215,15 @@ sub _build__analytes {
       next;
     }
 
+    # proceed_to_cherrypick
+    if ($self->proceed_to_cherrypick) {
+      my $sample_xml = $self->fetch_and_parse($analyte_dom->findvalue($SAMPLE_PATH));
+      my $to_proceed = $sample_xml->findvalue($PROCEED_TO_SEQUENCING_PATH);
+      if (! $to_proceed) {
+        next;
+      }
+    }
+
     if (!exists $containers->{$container_url}) {
       my $container_doc = $self->fetch_and_parse($container_url);
       $containers->{$container_url}->{'doc'} = $container_doc;
@@ -318,16 +335,28 @@ sub _create_containers {
       push@{$self->_analytes->{$input_container}->{'output_containers'}}, $self->_build_container_info($container_doc);
     }
 
-    return;
-  }
+  } elsif ($self->proceed_to_cherrypick) {
+    my $analyte_count = 0;
+    my $container_type_index;
+    foreach my $input_container ( keys %{$self->_analytes}) {
+      $analyte_count += keys $self->_analytes->{$input_container};
+      $container_type_index = ($analyte_count - 1) / $NUMBER_OF_WELLS_STOCK_PLATE;
+      my $container_doc = $self->_create_container($self->_container_type->[$container_type_index]);
 
-  foreach my $input_container ( keys %{$self->_analytes}) {
-    foreach my $output_container_type_xml (@{$self->_container_type}) {
-
-      my $container_doc = $self->_create_container($output_container_type_xml);
       push @{$self->_analytes->{$input_container}->{'output_containers'}}, $self->_build_container_info($container_doc);
     }
+
+  } else {
+
+    foreach my $input_container ( keys %{$self->_analytes}) {
+      foreach my $output_container_type_xml (@{$self->_container_type}) {
+
+        my $container_doc = $self->_create_container($output_container_type_xml);
+        push @{$self->_analytes->{$input_container}->{'output_containers'}}, $self->_build_container_info($container_doc);
+      }
+    }
   }
+
   return;
 }
 
@@ -386,19 +415,28 @@ sub _create_placements_doc {
   return XML::LibXML->load_xml(string => $pXML);
 }
 
+sub _initialize_wells {
+  my ($self) = @_;
+
+  my @wells = (); # Ordered list of wells
+  ##no critic ValuesAndExpressions::ProhibitMagicNumbers
+  for (1..12) {
+    foreach my $column ('A'..'H') {
+      push @wells, $column . ':' . $_;
+    }
+  }
+  ##use critic
+
+  return \@wells;
+}
+
 sub _stamping {
   my ($self, $doc, $stamping_callback, $well_callback) = @_;
 
   my @wells = (); # Ordered list of wells
   my $well;
   if (!defined $well_callback) {
-    ##no critic ValuesAndExpressions::ProhibitMagicNumbers
-    for (1..12) {
-      foreach my $column ('A'..'H') {
-        push @wells, $column . ':' . $_;
-      }
-    }
-    ##use critic
+    @wells = @{$self->_initialize_wells};
   }
 
   my @placements = $doc->findnodes(q{ /stp:placements/output-placements });
@@ -416,6 +454,9 @@ sub _stamping {
         $well = $well_callback->($self, $input_container, $input_analyte);
       } else {
         $well = shift @wells;
+        if ($self->proceed_to_cherrypick && !@wells) {
+          @wells = @{$self->_initialize_wells};
+        }
       }
       ($doc, my @new_placements) = $stamping_callback->($self, $doc, $input_container, $input_analyte, $well);
       foreach my $placement (@new_placements) {
