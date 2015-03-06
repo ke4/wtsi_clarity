@@ -1,7 +1,9 @@
 use strict;
 use warnings;
-use Test::More tests => 17;
+use Test::More tests => 20;
 use Test::Exception;
+
+use Data::Dumper;
 
 local $ENV{'WTSI_CLARITY_HOME'}= q[t/data/config];
 
@@ -177,6 +179,9 @@ isa_ok( $pooler, 'wtsi_clarity::epp::isc::analyte_pooler');
                ]
     };
   my $actual_pool_hash = $pooler->_pools;
+
+  print Dumper $actual_pool_hash;
+
   my @expected_keys = keys %{$actual_pool_hash};
   my $expected_size = @expected_keys;
   is($expected_size, 2, 'Correct number of pools');
@@ -194,6 +199,12 @@ isa_ok( $pooler, 'wtsi_clarity::epp::isc::analyte_pooler');
     step_url => $base_uri . '/steps/122-21977',
   );
   lives_ok {$pooler->update_step_with_pools} "Get a correct response for updating for the step's pools";
+}
+
+{
+  is($pooler->_get_pool_name("E:1"), 'A5:H5', 'gets the correct pool name');
+  is($pooler->_get_pool_name("B:2"), 'A10:H10', 'gets the correct pool name');
+  throws_ok { $pooler->_get_pool_name("H:12")} qr/Pool name \(H:12\) is not defined for this destination well/, 'error when not defined well was given';
 }
 
 1;

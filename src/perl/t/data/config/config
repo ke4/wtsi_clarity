@@ -3,6 +3,10 @@ base_uri = http://testserver.com:1234/here
 username = user1
 password = pword1
 
+#base_uri = http://web-claritytest-01.internal.sanger.ac.uk:8080/api/v2
+#username = ke4
+#password = 12345678
+
 [clarity_mq]
 host=localhost
 username=guest
@@ -38,6 +42,7 @@ sm_pico_green=/Users/cs24/projects/clarity/wtsi_clarity/src/perl/t/data/sm/attac
 fluidigm_analysis=t/data/genotyping/fluidigm
 isc_cap_lib_qc=t/data/epp/isc/agilent_analyser
 post_lib_pcr_qc=t/data/epp/isc/calliper_analyser
+proceed=t/data/epp/sm/proceed_sample_updater
 
 [tag_plate]
 gatekeeper_url = http://dev.com/

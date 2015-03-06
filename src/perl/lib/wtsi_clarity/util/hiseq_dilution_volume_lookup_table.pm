@@ -67,21 +67,22 @@ __END__
 
 =head1 NAME
 
-  wtsi_clarity::util::filename
+  wtsi_clarity::util::hiseq_dilution_volume_lookup_table
 
 =head1 SYNOPSIS
 
-  with 'wtsi_clarity::util::filename';
+  my $lookup_table = wtsi_clarity::util::hiseq_dilution_volume_lookup_table->new();
+  $lookup_table->getVolume(3.3);
 
 =head1 DESCRIPTION
 
-  Utility to handle operations with a file.
+  Utility to get the dilution volume value from the given concentration.
 
 =head1 SUBROUTINES/METHODS
 
 =head2 getVolume
 
-  Look ups the volume for the given concentrations and returns it.
+  Look ups the dilution volume for the given concentrations and returns it.
   If the concentration is not in the lookup table, then it returns an empty string.
   
 =head1 CONFIGURATION AND ENVIRONMENT

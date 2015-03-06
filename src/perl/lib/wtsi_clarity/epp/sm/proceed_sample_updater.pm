@@ -139,15 +139,20 @@ sub _read_qc_file {
   }
 
   my ($server, $remote_directory, $filename) = $result_file_uri =~ /sftp:\/\/([^\/]+)\/(.*)\/([^\/]+[.].+)/smx;
-  my $file = $self->_download_qc_file($server, $remote_directory, $filename);
+  my $tmpdir = File::Temp->newdir();
+  my $local_filename = $tmpdir->dirname() . $filename;
+
+  my $remote_file = qq($server/$remote_directory/$filename);
+
+  my $file = $self->_download_qc_file($remote_file, $local_filename);
 
   return $file;
 }
 
 sub _download_qc_file {
-  my ($self, $server, $remote_directory, $filename) = @_;
+  my ($self, $remote_file, $local_filename) = @_;
 
-  return $self->request->download_file($server, $remote_directory, $filename);
+  return $self->request->download_file($remote_file, $local_filename);
 }
 
 1;
