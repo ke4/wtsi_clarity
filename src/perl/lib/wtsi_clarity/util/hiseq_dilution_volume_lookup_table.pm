@@ -2,7 +2,6 @@ package wtsi_clarity::util::hiseq_dilution_volume_lookup_table;
 
 use Moose;
 use Readonly;
-use Carp;
 
 our $VERSION = '0.0';
 
@@ -55,7 +54,11 @@ Readonly::Hash  my %VOLUME_LOOKUP_TABLE  => {
 sub getVolume {
   my ($self, $concentration) = @_;
 
-  return $VOLUME_LOOKUP_TABLE{$concentration};
+  my $volume = $VOLUME_LOOKUP_TABLE{$concentration};
+
+  $volume = '' if (! defined $volume);
+
+  return $volume;
 }
 
 1;
@@ -76,9 +79,10 @@ __END__
 
 =head1 SUBROUTINES/METHODS
 
-=head2 with_uppercase_extension
+=head2 getVolume
 
-  Converts a file extension to uppercase.
+  Look ups the volume for the given concentrations and returns it.
+  If the concentration is not in the lookup table, then it returns an empty string.
   
 =head1 CONFIGURATION AND ENVIRONMENT
 
@@ -88,7 +92,7 @@ __END__
 
 =item Moose
 
-=item Carp
+=item Readonly
 
 =back
 
