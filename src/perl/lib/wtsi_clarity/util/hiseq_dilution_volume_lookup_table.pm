@@ -56,7 +56,9 @@ sub getVolume {
 
   my $volume = $VOLUME_LOOKUP_TABLE{$concentration};
 
-  $volume = '' if (! defined $volume);
+  if (! defined $volume) {
+    $volume = q{};
+  }
 
   return $volume;
 }

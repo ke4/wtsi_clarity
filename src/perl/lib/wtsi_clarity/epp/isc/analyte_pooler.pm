@@ -8,8 +8,6 @@ use List::MoreUtils qw/uniq/;
 
 use wtsi_clarity::isc::pooling::mapper;
 
-use Data::Dumper;
-
 extends 'wtsi_clarity::epp';
 
 our $VERSION = '0.0';
@@ -22,7 +20,7 @@ Readonly::Scalar my $ARTIFACT_LOCATION_PATH   => q{location/value };
 Readonly::Scalar my $CONTAINER_LIMSID_PATH      => q{/con:details/con:container/@limsid };
 ## use critic
 
-Readonly::Hash  my %POOL_NAMES_BY_TARGET_WELL => {
+Readonly::Hash my %POOL_NAMES_BY_TARGET_WELL => {
   'A:1' => 'A1:H1',
   'B:1' => 'A2:H2',
   'C:1' => 'A3:H3',
@@ -151,16 +149,12 @@ has '_pools' => (
 sub _build__pools {
   my $self = shift;
 
-  print Dumper $self->_input_artifacts_location;
-
   my $mappings = $self->_mapping;
   my $pools = {};
   while ( my ($location, $analyte_uri) = each %{$self->_input_artifacts_location}) {
     foreach my $mapping (@{$mappings}) {
       if ($mapping->{'source_well'} eq $location) {
-        my $pool_name = join q{ }, $self->_get_pool_name($mapping->{'dest_well'}), $mapping->{'source_plate'};
-        # $pools->{$mapping->{'dest_well'}} ||= [];
-        # push @{$pools->{$mapping->{'dest_well'}}}, $analyte_uri;
+        my $pool_name = join q{ }, $self->process_doc->get_container_name_by_limsid($mapping->{'source_plate'}), $self->_get_pool_name($mapping->{'dest_well'});
         $pools->{$pool_name} ||= [];
         push @{$pools->{$pool_name}}, $analyte_uri;
       }

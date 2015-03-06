@@ -310,7 +310,7 @@ sub get_container_name_by_limsid {
   my $container_xml = $self->_parent->fetch_and_parse($uri);
   my $container_name = $container_xml->findvalue($CONTAINER_NAME_LOCATION);
 
-  croak qq{Could not find the name of container with the given limsid: $limsid} if (!defined $container_name || $container_name eq "");
+  croak qq{Could not find the name of container with the given limsid: $limsid} if (!defined $container_name || $container_name eq q{});
 
   return $container_name;
 }

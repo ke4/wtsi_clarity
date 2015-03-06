@@ -171,16 +171,14 @@ isa_ok( $pooler, 'wtsi_clarity::epp::isc::analyte_pooler');
 { # Test for getting back the expected pool hash
  my $expected_pools_hash =
     {
-      'C:1' => [
+      '1234567890123 A3:H3' => [
                  'http://web-claritytest-01.internal.sanger.ac.uk:8080/api/v2/artifacts/2-55028?state=25328'
                ],
-      'A:1' => [
+      '1234567890123 A1:H1' => [
                  'http://web-claritytest-01.internal.sanger.ac.uk:8080/api/v2/artifacts/2-55027?state=25327'
                ]
     };
   my $actual_pool_hash = $pooler->_pools;
-
-  print Dumper $actual_pool_hash;
 
   my @expected_keys = keys %{$actual_pool_hash};
   my $expected_size = @expected_keys;
@@ -194,9 +192,10 @@ isa_ok( $pooler, 'wtsi_clarity::epp::isc::analyte_pooler');
 }
 
 { # Tests for updating the current step with the created pools
+  local $ENV{'SAVE2WTSICLARITY_WEBCACHE'} = 0;
   my $pooler = wtsi_clarity::epp::isc::analyte_pooler->new(
-    process_url => $base_uri . '/processes/122-21977',
-    step_url => $base_uri . '/steps/122-21977',
+    process_url => $base_uri . '/processes/122-29034',
+    step_url => $base_uri . '/steps/122-29034',
   );
   lives_ok {$pooler->update_step_with_pools} "Get a correct response for updating for the step's pools";
 }
